@@ -7,9 +7,20 @@ const previousDate = document.querySelector('.previousDate')
 const currentCurrency = document.querySelector('.currentCurrency')
 const previousCurrency = document.querySelector('.previousCurrency')
 
-fetch('https://www.cbr-xml-daily.ru/daily_json.js')
-	.then((response) => response.json())
-	.then((data) => {
+async function fetchData() {
+	try {
+		const response = await fetch('https://www.cbr-xml-daily.ru/daily_json.js')
+		const data = await response.json()
+		return data
+	} catch (error) {
+		console.error('Error fetching data:', error)
+		throw error
+	}
+}
+
+async function populateCurrencyOptions() {
+	try {
+		const data = await fetchData()
 		for (const currency in data.Valute) {
 			const option = document.createElement('option')
 			option.value = currency
@@ -19,15 +30,19 @@ fetch('https://www.cbr-xml-daily.ru/daily_json.js')
 
 		const selectedCurrency = currencySelector.value
 		updateCurrencyInfo(selectedCurrency, data)
-	})
-	.catch((error) => console.error('Error fetching data:', error))
+	} catch (error) {
+		console.error('Error populating currency options:', error)
+	}
+}
 
-currencySelector.addEventListener('change', (event) => {
+currencySelector.addEventListener('change', async (event) => {
 	const selectedCurrency = event.target.value
-	fetch('https://www.cbr-xml-daily.ru/daily_json.js')
-		.then((response) => response.json())
-		.then((data) => updateCurrencyInfo(selectedCurrency, data))
-		.catch((error) => console.error('Error fetching data:', error))
+	try {
+		const data = await fetchData()
+		updateCurrencyInfo(selectedCurrency, data)
+	} catch (error) {
+		console.error('Error updating currency information:', error)
+	}
 })
 
 function updateCurrencyInfo(currency, data) {
@@ -45,3 +60,5 @@ function formatDateTime(dateTimeStr) {
 	const dateTime = new Date(dateTimeStr)
 	return dateTime.toLocaleString('en-GB')
 }
+
+populateCurrencyOptions()
